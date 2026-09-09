@@ -1,0 +1,924 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+
+body {
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: #f4f6f8;
+
+    color: #222;
+
+    padding: 25px;
+
+}
+
+
+.container {
+
+    max-width: 1150px;
+
+    margin: auto;
+
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.main-header {
+
+    text-align: center;
+
+    margin-bottom: 30px;
+
+}
+
+
+.icon {
+
+    font-size: 45px;
+
+    margin-bottom: 8px;
+
+}
+
+
+.main-header h1 {
+
+    font-size: 32px;
+
+    margin-bottom: 8px;
+
+}
+
+
+.main-header p {
+
+    color: #666;
+
+    font-size: 16px;
+
+}
+
+
+.top-history-btn {
+
+    margin-top: 20px;
+
+    padding: 12px 22px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #ffffff;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 3px 10px rgba(0,0,0,0.08);
+
+}
+
+
+/* =========================================
+   CARD
+========================================= */
+
+.card {
+
+    background: #ffffff;
+
+    border-radius: 14px;
+
+    padding: 25px;
+
+    margin-bottom: 22px;
+
+    box-shadow:
+        0 4px 18px rgba(0,0,0,0.07);
+
+}
+
+
+.card h2 {
+
+    margin-bottom: 18px;
+
+}
+
+
+/* =========================================
+   INPUT
+========================================= */
+
+.input-grid {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 20px;
+
+}
+
+
+.input-group {
+
+    display: flex;
+
+    flex-direction: column;
+
+}
+
+
+.full-width {
+
+    grid-column:
+        1 / -1;
+
+}
+
+
+label {
+
+    font-weight: bold;
+
+    margin-bottom: 8px;
+
+}
+
+
+input {
+
+    width: 100%;
+
+    padding: 13px;
+
+    border:
+        1px solid #d0d5da;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+
+    outline: none;
+
+}
+
+
+input:focus {
+
+    border-color: #777;
+
+}
+
+
+.amount-input {
+
+    display: flex;
+
+    align-items: center;
+
+    border:
+        1px solid #d0d5da;
+
+    border-radius: 8px;
+
+    overflow: hidden;
+
+}
+
+
+.amount-input span {
+
+    padding:
+        13px 15px;
+
+    font-weight: bold;
+
+}
+
+
+.amount-input input {
+
+    border: none;
+
+    border-radius: 0;
+
+}
+
+
+/* =========================================
+   SECTION HEADER
+========================================= */
+
+.section-header {
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items: center;
+
+    gap: 15px;
+
+}
+
+
+.section-description {
+
+    color: #777;
+
+    font-size: 14px;
+
+    margin-top: -10px;
+
+    margin-bottom: 20px;
+
+}
+
+
+.add-btn {
+
+    padding:
+        12px 18px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+
+/* =========================================
+   CONSUMER
+========================================= */
+
+.consumer-heading {
+
+    display: grid;
+
+    grid-template-columns:
+        2fr 1fr 1fr 70px;
+
+    gap: 12px;
+
+    font-weight: bold;
+
+    color: #555;
+
+    margin-bottom: 8px;
+
+}
+
+
+.consumer-row {
+
+    display: grid;
+
+    grid-template-columns:
+        2fr 1fr 1fr 70px;
+
+    gap: 12px;
+
+    margin-bottom: 12px;
+
+}
+
+
+.remove-btn {
+
+    font-size: 22px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    cursor: pointer;
+
+}
+
+
+/* =========================================
+   MAIN CALCULATE
+========================================= */
+
+.main-calculate-btn {
+
+    width: 100%;
+
+    padding: 16px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    font-size: 17px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    margin-bottom: 22px;
+
+}
+
+
+/* =========================================
+   RESULT
+========================================= */
+
+.result-section {
+
+    display: none;
+
+}
+
+
+/* =========================================
+   INDIVIDUAL CALCULATION
+========================================= */
+
+.individual-box {
+
+    border:
+        1px solid #ddd;
+
+    border-radius: 10px;
+
+    padding: 18px;
+
+    margin-bottom: 12px;
+
+}
+
+
+.individual-box h3 {
+
+    margin-bottom: 12px;
+
+}
+
+
+.individual-box p {
+
+    margin: 6px 0;
+
+    line-height: 1.5;
+
+}
+
+
+/* =========================================
+   TABLE
+========================================= */
+
+.table-wrapper {
+
+    width: 100%;
+
+    overflow-x: auto;
+
+}
+
+
+table {
+
+    width: 100%;
+
+    border-collapse:
+        collapse;
+
+    margin-top: 10px;
+
+}
+
+
+th,
+td {
+
+    border:
+        1px solid #ddd;
+
+    padding: 12px;
+
+    text-align: center;
+
+    white-space:
+        nowrap;
+
+}
+
+
+th {
+
+    font-weight: bold;
+
+}
+
+
+tfoot th {
+
+    font-size: 15px;
+
+}
+
+
+/* =========================================
+   OVERALL CALCULATION
+========================================= */
+
+.calculation-box {
+
+    border:
+        1px solid #ddd;
+
+    border-radius: 10px;
+
+    overflow: hidden;
+
+}
+
+
+.calculation-row {
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    padding: 16px 18px;
+
+    border-bottom:
+        1px solid #ddd;
+
+    font-size: 17px;
+
+}
+
+
+.ground-row {
+
+    border-bottom: none;
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+}
+
+
+/* =========================================
+   GROUND BILL
+========================================= */
+
+.ground-section {
+
+    margin-top: 25px;
+
+    padding: 20px;
+
+    border:
+        1px solid #ddd;
+
+    border-radius: 10px;
+
+}
+
+
+.ground-section h3 {
+
+    margin-bottom: 7px;
+
+}
+
+
+.ground-section p {
+
+    color: #666;
+
+    margin-bottom: 18px;
+
+}
+
+
+.ground-input {
+
+    display: flex;
+
+    gap: 12px;
+
+    align-items: end;
+
+}
+
+
+.ground-person-input {
+
+    flex: 1;
+
+}
+
+
+.ground-btn {
+
+    padding:
+        13px 18px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+
+.ground-result {
+
+    display: none;
+
+    margin-top: 20px;
+
+    border:
+        1px solid #ddd;
+
+    border-radius: 10px;
+
+    padding: 20px;
+
+    grid-template-columns:
+        1fr 1fr 2fr;
+
+    gap: 15px;
+
+    text-align: center;
+
+}
+
+
+.ground-result > div {
+
+    padding: 15px;
+
+}
+
+
+.ground-result span {
+
+    display: block;
+
+    color: #666;
+
+    margin-bottom: 7px;
+
+}
+
+
+.ground-result strong {
+
+    font-size: 21px;
+
+}
+
+
+.share-result {
+
+    border-left:
+        1px solid #ddd;
+
+}
+
+
+/* =========================================
+   FINAL BILL
+========================================= */
+
+.final-heading {
+
+    margin-bottom: 15px;
+
+}
+
+
+.final-heading p {
+
+    color: #666;
+
+}
+
+
+.download-buttons,
+.save-history-area {
+
+    display: flex;
+
+    gap: 12px;
+
+    margin-top: 20px;
+
+}
+
+
+.download-buttons button,
+.save-history-area button {
+
+    flex: 1;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+}
+
+
+.save-history-area {
+
+    margin-top: 12px;
+
+}
+
+
+/* =========================================
+   HISTORY
+========================================= */
+
+.history-section {
+
+    display: none;
+
+    background: #ffffff;
+
+    border-radius: 14px;
+
+    padding: 25px;
+
+    margin-top: 22px;
+
+    box-shadow:
+        0 4px 18px rgba(0,0,0,0.07);
+
+}
+
+
+.history-header {
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    align-items: center;
+
+    margin-bottom: 20px;
+
+}
+
+
+.history-header p {
+
+    color: #777;
+
+    margin-top: 5px;
+
+}
+
+
+.close-history-btn {
+
+    width: 40px;
+
+    height: 40px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    font-size: 24px;
+
+    cursor: pointer;
+
+}
+
+
+.history-card {
+
+    border:
+        1px solid #ddd;
+
+    border-radius: 10px;
+
+    padding: 20px;
+
+    margin-bottom: 15px;
+
+}
+
+
+.history-card h3 {
+
+    margin-bottom: 10px;
+
+}
+
+
+.history-card p {
+
+    margin: 6px 0;
+
+}
+
+
+.history-actions {
+
+    margin-top: 15px;
+
+}
+
+
+.delete-history-btn {
+
+    padding:
+        9px 14px;
+
+    border: none;
+
+    border-radius: 7px;
+
+    cursor: pointer;
+
+}
+
+
+.no-history {
+
+    text-align: center;
+
+    color: #777;
+
+    padding: 30px;
+
+}
+
+
+/* =========================================
+   FOOTER
+========================================= */
+
+footer {
+
+    text-align: center;
+
+    color: #777;
+
+    padding:
+        30px 10px 10px;
+
+    line-height: 1.8;
+
+}
+
+
+footer strong {
+
+    color: #222;
+
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 750px) {
+
+
+    body {
+
+        padding: 15px;
+
+    }
+
+
+    .main-header h1 {
+
+        font-size: 26px;
+
+    }
+
+
+    .input-grid {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .full-width {
+
+        grid-column: auto;
+
+    }
+
+
+    .section-header {
+
+        flex-direction: column;
+
+        align-items:
+            stretch;
+
+    }
+
+
+    .consumer-heading {
+
+        display: none;
+
+    }
+
+
+    .consumer-row {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .ground-input {
+
+        flex-direction: column;
+
+        align-items:
+            stretch;
+
+    }
+
+
+    .ground-result {
+
+        grid-template-columns:
+            1fr;
+
+    }
+
+
+    .share-result {
+
+        border-left: none;
+
+        border-top:
+            1px solid #ddd;
+
+    }
+
+
+    .download-buttons,
+    .save-history-area {
+
+        flex-direction:
+            column;
+
+    }
+
+
+    table {
+
+        min-width:
+            850px;
+
+    }
+
+}
