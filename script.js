@@ -50,6 +50,15 @@ document
                 min="0"
             >
 
+            <input
+                type="number"
+                class="room-people"
+                value="1"
+                min="1"
+                step="1"
+                title="Number of people living in this room"
+            >
+
             <button
                 type="button"
                 class="remove-btn"
@@ -168,6 +177,8 @@ document
 
         let totalRoomBill = 0;
 
+        let totalRoomPeople = 0;
+
 
         // READ CONSUMERS
 
@@ -203,6 +214,16 @@ document
                 );
 
 
+            const roomPeople =
+                Number(
+                    row
+                        .querySelector(
+                            ".room-people"
+                        )
+                        .value
+                );
+
+
             if (!name) {
 
                 continue;
@@ -217,6 +238,19 @@ document
 
                 alert(
                     `Please enter both readings for ${name}.`
+                );
+
+                return;
+            }
+
+
+            if (
+                !Number.isInteger(roomPeople) ||
+                roomPeople <= 0
+            ) {
+
+                alert(
+                    `Please enter a valid number of people in ${name}'s room.`
                 );
 
                 return;
@@ -256,7 +290,9 @@ document
 
                 units: units,
 
-                roomBill: roomBill
+                roomBill: roomBill,
+
+                roomPeople: roomPeople
 
             });
 
@@ -264,6 +300,8 @@ document
             totalUnits += units;
 
             totalRoomBill += roomBill;
+
+            totalRoomPeople += roomPeople;
 
         }
 
@@ -327,6 +365,13 @@ document
                 <h3>
                     👤 ${escapeHTML(person.name)}
                 </h3>
+
+                <p>
+                    People in Room:
+                    <strong>
+                        ${person.roomPeople}
+                    </strong>
+                </p>
 
                 <p>
                     Current Reading − Past Reading:
@@ -468,6 +513,14 @@ document
             formatMoney(groundBill);
 
 
+        // AUTOMATIC TOTAL PERSONS
+
+        document.getElementById(
+            "groundPersons"
+        ).value =
+            totalRoomPeople;
+
+
         // FINAL DATE
 
         document.getElementById(
@@ -522,27 +575,6 @@ document
         () => {
 
 
-            const persons =
-                Number(
-                    document.getElementById(
-                        "groundPersons"
-                    ).value
-                );
-
-
-            if (
-                !Number.isInteger(persons) ||
-                persons <= 0
-            ) {
-
-                alert(
-                    "Please enter a valid number of persons."
-                );
-
-                return;
-            }
-
-
             if (consumers.length === 0) {
 
                 alert(
@@ -553,7 +585,23 @@ document
             }
 
 
-            // GROUND SHARE
+            // TOTAL PEOPLE FROM ALL ROOMS
+
+            const persons =
+                consumers.reduce(
+                    (sum, person) =>
+                        sum + person.roomPeople,
+                    0
+                );
+
+
+            document.getElementById(
+                "groundPersons"
+            ).value =
+                persons;
+
+
+            // GROUND SHARE PER PERSON
 
             groundShare =
                 groundBill / persons;
@@ -610,9 +658,17 @@ document
             consumers.forEach(person => {
 
 
+                // Ground share depends on number of people
+                // living in that room.
+
+                const personGroundShare =
+                    groundShare *
+                    person.roomPeople;
+
+
                 const finalBill =
                     person.roomBill +
-                    groundShare;
+                    personGroundShare;
 
 
                 finalRoomTotal +=
@@ -620,7 +676,7 @@ document
 
 
                 finalGroundTotal +=
-                    groundShare;
+                    personGroundShare;
 
 
                 finalTotal +=
@@ -654,8 +710,12 @@ document
                     </td>
 
                     <td>
+                        ${person.roomPeople}
+                    </td>
+
+                    <td>
                         ${formatMoney(
-                            groundShare
+                            personGroundShare
                         )}
                     </td>
 
@@ -689,6 +749,12 @@ document
                 formatMoney(
                     finalRoomTotal
                 );
+
+
+            document.getElementById(
+                "finalPeopleTotal"
+            ).textContent =
+                persons;
 
 
             document.getElementById(
@@ -779,10 +845,10 @@ document
 
 
             const groundPersons =
-                Number(
-                    document.getElementById(
-                        "groundPersons"
-                    ).value
+                consumers.reduce(
+                    (sum, person) =>
+                        sum + person.roomPeople,
+                    0
                 );
 
 
@@ -838,9 +904,15 @@ document
                             roomBill:
                                 person.roomBill,
 
+                            roomPeople:
+                                person.roomPeople,
+
                             finalBill:
                                 person.roomBill +
-                                groundShare
+                                (
+                                    groundShare *
+                                    person.roomPeople
+                                )
 
                         })
                     )
@@ -1001,6 +1073,15 @@ function displayHistory() {
             person => {
 
 
+                const people =
+                    person.roomPeople || 1;
+
+
+                const roomGroundShare =
+                    record.groundShare *
+                    people;
+
+
                 consumerRows += `
 
                     <tr>
@@ -1026,6 +1107,16 @@ function displayHistory() {
                         <td>
                             ${formatMoney(
                                 person.roomBill
+                            )}
+                        </td>
+
+                        <td>
+                            ${people}
+                        </td>
+
+                        <td>
+                            ${formatMoney(
+                                roomGroundShare
                             )}
                         </td>
 
@@ -1155,6 +1246,14 @@ function displayHistory() {
 
                             <th>
                                 Room Bill
+                            </th>
+
+                            <th>
+                                People
+                            </th>
+
+                            <th>
+                                Ground Share
                             </th>
 
                             <th>
