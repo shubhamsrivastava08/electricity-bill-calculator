@@ -1,1724 +1,2265 @@
+const RATE = 8;
+
+const DEFAULT_NAMES = [
+    "Shubham",
+    "Pankaj",
+    "Milan",
+    "Vishwesh",
+    "Rajiv",
+    "Aakash"
+];
+
+let people = DEFAULT_NAMES.map(name => ({
+    name: name,
+    past: "",
+    current: ""
+}));
+
+let currentGroundData = null;
+
+
 // =====================================================
-// ELECTRICITY BILL CALCULATOR
-// Made by Shubham Srivastava | 2026
+// HELPERS
 // =====================================================
 
+const $ = id => document.getElementById(id);
 
-let consumers = [];
-
-let groundBill = 0;
-
-let groundShare = 0;
+const money = number => {
+    return "₹" + Number(number || 0).toLocaleString(
+        "en-IN",
+        {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        }
+    );
+};
 
 
 // =====================================================
-// ADD CONSUMER
+// DEFAULT DATE
 // =====================================================
 
-document
-    .getElementById("addConsumer")
-    .addEventListener("click", () => {
+const today = new Date();
+
+$("billMonth").value =
+    `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+    ).padStart(2, "0")}`;
+
+$("billDate").value =
+    `${today.getFullYear()}-${String(
+        today.getMonth() + 1
+    ).padStart(2, "0")}-${String(
+        today.getDate()
+    ).padStart(2, "0")}`;
+
+
+// =====================================================
+// TOAST
+// =====================================================
+
+function toast(message) {
+
+    const toastBox = $("toast");
+
+    toastBox.textContent = message;
+
+    toastBox.classList.add("show");
+
+    clearTimeout(window.__toast);
+
+    window.__toast = setTimeout(() => {
+        toastBox.classList.remove("show");
+    }, 2600);
+}
+
+
+// =====================================================
+// TOTAL CALCULATION
+// =====================================================
+
+function totals() {
+
+    let totalUnits = 0;
+    let totalRoomBill = 0;
+
+    people.forEach(person => {
+
+        const past = Number(person.past);
+        const current = Number(person.current);
+
+        const valid =
+            person.past !== "" &&
+            person.current !== "" &&
+            Number.isFinite(past) &&
+            Number.isFinite(current) &&
+            current >= past;
+
+        if (valid) {
+
+            const units = current - past;
+
+            totalUnits += units;
+
+            totalRoomBill += units * RATE;
+        }
+    });
+
+    return {
+        units: totalUnits,
+        room: totalRoomBill
+    };
+}
+
+
+// =====================================================
+// RENDER METER READING TABLE
+// =====================================================
+
+function renderReadings() {
+
+    const body = $("readingBody");
+
+    body.innerHTML = "";
+
+
+    people.forEach((person, index) => {
+
+        const past = Number(person.past);
+        const current = Number(person.current);
+
+        const valid =
+            person.past !== "" &&
+            person.current !== "" &&
+            Number.isFinite(past) &&
+            Number.isFinite(current) &&
+            current >= past;
+
+
+        const units =
+            valid
+                ? current - past
+                : 0;
+
+
+        const roomBill =
+            units * RATE;
 
 
         const row =
-            document.createElement("div");
-
-
-        row.className =
-            "consumer-row";
+            document.createElement("tr");
 
 
         row.innerHTML = `
 
-            <input
-                type="text"
-                class="consumer-name"
-                placeholder="Enter name"
-            >
+            <td>
+                ${index + 1}
+            </td>
 
-            <input
-                type="number"
-                class="past-reading"
-                placeholder="Past reading"
-                min="0"
-            >
 
-            <input
-                type="number"
-                class="current-reading"
-                placeholder="Current reading"
-                min="0"
-            >
+            <td>
 
-            <input
-                type="number"
-                class="room-people"
-                value="1"
-                min="1"
-                step="1"
-                title="Number of people living in this room"
-            >
+                <input
+                    class="name-input"
+                    value="${escapeAttr(person.name)}"
+                    data-index="${index}"
+                    data-field="name"
+                >
 
-            <button
-                type="button"
-                class="remove-btn"
-                onclick="removeConsumer(this)"
-                title="Remove consumer"
-            >
-                ×
-            </button>
+            </td>
+
+
+            <td>
+
+                <input
+                    type="number"
+                    min="0"
+                    value="${escapeAttr(person.past)}"
+                    data-index="${index}"
+                    data-field="past"
+                >
+
+            </td>
+
+
+            <td>
+
+                <input
+                    type="number"
+                    min="0"
+                    value="${escapeAttr(person.current)}"
+                    data-index="${index}"
+                    data-field="current"
+                >
+
+            </td>
+
+
+            <td class="readonly-cell units-cell">
+
+                ${valid ? units : "—"}
+
+            </td>
+
+
+            <td class="readonly-cell">
+
+                <span class="room-cell">
+                    ${money(roomBill)}
+                </span>
+
+            </td>
+
+
+            <td>
+
+                <button
+                    class="delete-btn"
+                    data-delete="${index}"
+                    title="Remove person"
+                >
+                    🗑️
+                </button>
+
+            </td>
 
         `;
 
 
-        document
-            .getElementById("consumerContainer")
-            .appendChild(row);
+        body.appendChild(row);
 
     });
 
 
-// =====================================================
-// REMOVE CONSUMER
-// =====================================================
+    // =================================================
+    // INPUT EVENTS
+    // =================================================
 
-function removeConsumer(button) {
+    body.querySelectorAll("input")
+        .forEach(input => {
+
+            input.addEventListener(
+                "input",
+                event => {
+
+                    const index =
+                        Number(
+                            event.target.dataset.index
+                        );
+
+                    const field =
+                        event.target.dataset.field;
 
 
-    const rows =
-        document.querySelectorAll(
-            ".consumer-row"
-        );
+                    people[index][field] =
+                        event.target.value;
 
 
-    if (rows.length > 1) {
+                    renderReadings();
 
-        button.parentElement.remove();
+                }
+            );
 
-    }
+        });
+
+
+    // =================================================
+    // DELETE EVENTS
+    // =================================================
+
+    body.querySelectorAll("[data-delete]")
+        .forEach(button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    if (people.length <= 1) {
+
+                        toast(
+                            "At least one person is required."
+                        );
+
+                        return;
+                    }
+
+
+                    const index =
+                        Number(
+                            button.dataset.delete
+                        );
+
+
+                    people.splice(index, 1);
+
+
+                    currentGroundData = null;
+
+
+                    renderReadings();
+
+                    renderGround();
+
+                }
+            );
+
+        });
+
+
+    // =================================================
+    // TOTALS
+    // =================================================
+
+    const result = totals();
+
+
+    $("totalUnits").textContent =
+        result.units;
+
+
+    $("totalRoomBill").textContent =
+        money(result.room);
+
+
+    $("totalUnitsCard").textContent =
+        result.units;
+
+
+    $("totalRoomBillCard").textContent =
+        money(result.room);
 
 }
 
 
 // =====================================================
-// MAIN CALCULATION
+// ESCAPE ATTRIBUTE
 // =====================================================
 
-document
-    .getElementById("calculateBtn")
-    .addEventListener("click", () => {
+function escapeAttr(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+}
 
 
-        const overallBill =
-            Number(
-                document.getElementById(
-                    "overallBill"
-                ).value
-            );
+// =====================================================
+// VALIDATE READINGS
+// =====================================================
+
+function validReadings() {
+
+    for (
+        let index = 0;
+        index < people.length;
+        index++
+    ) {
+
+        const person = people[index];
 
 
-        const billMonth =
-            document.getElementById(
-                "billMonth"
-            ).value;
+        if (!person.name.trim()) {
 
+            return "Enter a name for every person.";
 
-        const billDate =
-            document.getElementById(
-                "billDate"
-            ).value;
-
-
-        // VALIDATION
-
-        if (!billMonth) {
-
-            alert(
-                "Please select the bill month."
-            );
-
-            return;
-        }
-
-
-        if (!billDate) {
-
-            alert(
-                "Please select the bill date."
-            );
-
-            return;
         }
 
 
         if (
-            !Number.isFinite(overallBill) ||
-            overallBill <= 0
+            person.past === "" ||
+            person.current === ""
         ) {
 
-            alert(
-                "Please enter the overall electricity bill."
-            );
-
-            return;
-        }
-
-
-        const rows =
-            document.querySelectorAll(
-                ".consumer-row"
-            );
-
-
-        consumers = [];
-
-
-        let totalUnits = 0;
-
-        let totalRoomBill = 0;
-
-        let totalRoomPeople = 0;
-
-
-        // READ CONSUMERS
-
-        for (const row of rows) {
-
-
-            const name =
-                row
-                    .querySelector(
-                        ".consumer-name"
-                    )
-                    .value
-                    .trim();
-
-
-            const past =
-                Number(
-                    row
-                        .querySelector(
-                            ".past-reading"
-                        )
-                        .value
-                );
-
-
-            const current =
-                Number(
-                    row
-                        .querySelector(
-                            ".current-reading"
-                        )
-                        .value
-                );
-
-
-            const roomPeople =
-                Number(
-                    row
-                        .querySelector(
-                            ".room-people"
-                        )
-                        .value
-                );
-
-
-            if (!name) {
-
-                continue;
-
-            }
-
-
-            if (
-                !Number.isFinite(past) ||
-                !Number.isFinite(current)
-            ) {
-
-                alert(
-                    `Please enter both readings for ${name}.`
-                );
-
-                return;
-            }
-
-
-            if (
-                !Number.isInteger(roomPeople) ||
-                roomPeople <= 0
-            ) {
-
-                alert(
-                    `Please enter a valid number of people in ${name}'s room.`
-                );
-
-                return;
-            }
-
-
-            if (current < past) {
-
-                alert(
-                    `${name}: Current reading cannot be less than past reading.`
-                );
-
-                return;
-            }
-
-
-            // UNITS
-
-            const units =
-                current - past;
-
-
-            // ROOM BILL
-            // Units × ₹8
-
-            const roomBill =
-                units * 8;
-
-
-            consumers.push({
-
-                name: name,
-
-                past: past,
-
-                current: current,
-
-                units: units,
-
-                roomBill: roomBill,
-
-                roomPeople: roomPeople
-
-            });
-
-
-            totalUnits += units;
-
-            totalRoomBill += roomBill;
-
-            totalRoomPeople += roomPeople;
+            return `Enter both readings for ${person.name}.`;
 
         }
 
 
-        if (consumers.length === 0) {
+        if (
+            Number(person.current) <
+            Number(person.past)
+        ) {
 
-            alert(
-                "Please add at least one consumer."
-            );
-
-            return;
-        }
-
-
-        // =================================================
-        // GROUND BILL
-        // =================================================
-
-        groundBill =
-            overallBill - totalRoomBill;
-
-
-        if (groundBill < 0) {
-
-            alert(
-                "Total Room Bill is greater than Overall Electricity Bill."
-            );
-
-            return;
-        }
-
-
-        // =================================================
-        // INDIVIDUAL CALCULATIONS
-        // =================================================
-
-        const individualContainer =
-            document.getElementById(
-                "individualCalculations"
-            );
-
-
-        individualContainer.innerHTML = "";
-
-
-        consumers.forEach(person => {
-
-
-            const box =
-                document.createElement(
-                    "div"
-                );
-
-
-            box.className =
-                "individual-box";
-
-
-            box.innerHTML = `
-
-                <h3>
-                    👤 ${escapeHTML(person.name)}
-                </h3>
-
-                <p>
-                    People in Room:
-                    <strong>
-                        ${person.roomPeople}
-                    </strong>
-                </p>
-
-                <p>
-                    Current Reading − Past Reading:
-                    <strong>
-                        ${person.current}
-                        −
-                        ${person.past}
-                    </strong>
-                </p>
-
-                <p>
-                    Units:
-                    <strong>
-                        ${person.current}
-                        −
-                        ${person.past}
-                        =
-                        ${person.units}
-                        Units
-                    </strong>
-                </p>
-
-                <p>
-                    Electricity Calculation:
-                    <strong>
-                        ${person.units}
-                        × ₹8
-                        =
-                        ${formatMoney(person.roomBill)}
-                    </strong>
-                </p>
-
-                <p>
-                    <strong>
-                        Room Bill =
-                        ${formatMoney(person.roomBill)}
-                    </strong>
-                </p>
-
+            return `
+                Current reading cannot be less than
+                past reading for ${person.name}.
             `;
 
+        }
 
-            individualContainer
-                .appendChild(box);
-
-        });
+    }
 
 
-        // =================================================
-        // ROOM TABLE
-        // =================================================
+    return null;
+}
 
-        const roomTable =
-            document.getElementById(
-                "roomTableBody"
+
+// =====================================================
+// SLIDES
+// =====================================================
+
+function showSlide(number) {
+
+    document
+        .querySelectorAll(".slide")
+        .forEach((slide, index) => {
+
+            slide.classList.toggle(
+                "active",
+                index === number - 1
             );
 
-
-        roomTable.innerHTML = "";
-
-
-        consumers.forEach(person => {
+        });
 
 
-            const row =
-                document.createElement(
-                    "tr"
-                );
+    document
+        .querySelectorAll(".step")
+        .forEach((step, index) => {
 
-
-            row.innerHTML = `
-
-                <td>
-                    ${escapeHTML(person.name)}
-                </td>
-
-                <td>
-                    ${person.past}
-                </td>
-
-                <td>
-                    ${person.current}
-                </td>
-
-                <td>
-                    ${person.units}
-                </td>
-
-                <td>
-                    ${person.units}
-                    × ₹8
-                    =
-                    ${formatMoney(person.roomBill)}
-                </td>
-
-                <td>
-                    ${formatMoney(person.roomBill)}
-                </td>
-
-            `;
-
-
-            roomTable.appendChild(row);
+            step.classList.toggle(
+                "active",
+                index === number - 1
+            );
 
         });
 
 
-        // TOTALS
-
-        document.getElementById(
-            "totalUnits"
-        ).textContent =
-            totalUnits;
-
-
-        document.getElementById(
-            "totalRoomBill"
-        ).textContent =
-            formatMoney(totalRoomBill);
-
-
-        // OVERALL
-
-        document.getElementById(
-            "overallDisplay"
-        ).textContent =
-            formatMoney(overallBill);
-
-
-        document.getElementById(
-            "roomDisplay"
-        ).textContent =
-            formatMoney(totalRoomBill);
-
-
-        document.getElementById(
-            "groundBill"
-        ).textContent =
-            formatMoney(groundBill);
-
-
-        // AUTOMATIC TOTAL PERSONS
-
-        document.getElementById(
-            "groundPersons"
-        ).value =
-            totalRoomPeople;
-
-
-        // FINAL DATE
-
-        document.getElementById(
-            "finalBillInfo"
-        ).textContent =
-            `${formatMonth(billMonth)} • ${formatDate(billDate)}`;
-
-
-        // SHOW RESULT
-
-        document.getElementById(
-            "result"
-        ).style.display =
-            "block";
-
-
-        // RESET OLD GROUND RESULT
-
-        document.getElementById(
-            "groundResult"
-        ).style.display =
-            "none";
-
-
-        document.getElementById(
-            "finalSection"
-        ).style.display =
-            "none";
-
-
-        // SCROLL TO RESULT
-
-        document.getElementById(
-            "result"
-        ).scrollIntoView({
-            behavior: "smooth"
-        });
-
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
     });
 
 
-// =====================================================
-// GROUND BILL CALCULATION
-// =====================================================
+    if (number === 2) {
 
-document
-    .getElementById(
-        "groundCalculateBtn"
-    )
-    .addEventListener(
-        "click",
-        () => {
+        renderGround();
 
+    }
 
-            if (consumers.length === 0) {
-
-                alert(
-                    "Please calculate the main bill first."
-                );
-
-                return;
-            }
-
-
-            // TOTAL PEOPLE FROM ALL ROOMS
-
-            const persons =
-                consumers.reduce(
-                    (sum, person) =>
-                        sum + person.roomPeople,
-                    0
-                );
-
-
-            document.getElementById(
-                "groundPersons"
-            ).value =
-                persons;
-
-
-            // GROUND SHARE PER PERSON
-
-            groundShare =
-                groundBill / persons;
-
-
-            // DISPLAY GROUND RESULT
-
-            document.getElementById(
-                "groundAmountDisplay"
-            ).textContent =
-                formatMoney(groundBill);
-
-
-            document.getElementById(
-                "groundPersonsDisplay"
-            ).textContent =
-                persons;
-
-
-            document.getElementById(
-                "groundShare"
-            ).textContent =
-                formatMoney(groundShare);
-
-
-            document.getElementById(
-                "groundResult"
-            ).style.display =
-                "grid";
-
-
-            // =================================================
-            // FINAL BILL
-            // =================================================
-
-            const finalBody =
-                document.getElementById(
-                    "finalTableBody"
-                );
-
-
-            finalBody.innerHTML = "";
-
-
-            let finalRoomTotal = 0;
-
-            let finalGroundTotal = 0;
-
-            let finalTotal = 0;
-
-            let finalUnits = 0;
-
-
-            consumers.forEach(person => {
-
-
-                // Ground share depends on number of people
-                // living in that room.
-
-                const personGroundShare =
-                    groundShare *
-                    person.roomPeople;
-
-
-                const finalBill =
-                    person.roomBill +
-                    personGroundShare;
-
-
-                finalRoomTotal +=
-                    person.roomBill;
-
-
-                finalGroundTotal +=
-                    personGroundShare;
-
-
-                finalTotal +=
-                    finalBill;
-
-
-                finalUnits +=
-                    person.units;
-
-
-                const row =
-                    document.createElement(
-                        "tr"
-                    );
-
-
-                row.innerHTML = `
-
-                    <td>
-                        ${escapeHTML(person.name)}
-                    </td>
-
-                    <td>
-                        ${person.units}
-                    </td>
-
-                    <td>
-                        ${formatMoney(
-                            person.roomBill
-                        )}
-                    </td>
-
-                    <td>
-                        ${person.roomPeople}
-                    </td>
-
-                    <td>
-                        ${formatMoney(
-                            personGroundShare
-                        )}
-                    </td>
-
-                    <td>
-                        <strong>
-                            ${formatMoney(
-                                finalBill
-                            )}
-                        </strong>
-                    </td>
-
-                `;
-
-
-                finalBody.appendChild(row);
-
-            });
-
-
-            // TOTALS
-
-            document.getElementById(
-                "finalUnitsTotal"
-            ).textContent =
-                finalUnits;
-
-
-            document.getElementById(
-                "finalRoomTotal"
-            ).textContent =
-                formatMoney(
-                    finalRoomTotal
-                );
-
-
-            document.getElementById(
-                "finalPeopleTotal"
-            ).textContent =
-                persons;
-
-
-            document.getElementById(
-                "finalGroundTotal"
-            ).textContent =
-                formatMoney(
-                    finalGroundTotal
-                );
-
-
-            document.getElementById(
-                "finalTotal"
-            ).textContent =
-                formatMoney(
-                    finalTotal
-                );
-
-
-            // SHOW FINAL
-
-            document.getElementById(
-                "finalSection"
-            ).style.display =
-                "block";
-
-
-            document.getElementById(
-                "finalSection"
-            ).scrollIntoView({
-                behavior: "smooth"
-            });
-
-        }
-    );
+}
 
 
 // =====================================================
-// SAVE BILL TO HISTORY
+// ADD PERSON
 // =====================================================
 
-document
-    .getElementById(
-        "saveHistoryBtn"
-    )
-    .addEventListener(
-        "click",
-        () => {
+$("addPersonBtn").onclick = () => {
+
+    people.push({
+        name: "",
+        past: "",
+        current: ""
+    });
 
 
-            if (consumers.length === 0) {
+    renderReadings();
 
-                alert(
-                    "Please calculate the bill first."
-                );
-
-                return;
-            }
-
-
-            if (groundShare <= 0) {
-
-                alert(
-                    "Please calculate the Ground Share first."
-                );
-
-                return;
-            }
-
-
-            const month =
-                document.getElementById(
-                    "billMonth"
-                ).value;
-
-
-            const billDate =
-                document.getElementById(
-                    "billDate"
-                ).value;
-
-
-            const overallBill =
-                Number(
-                    document.getElementById(
-                        "overallBill"
-                    ).value
-                );
-
-
-            const groundPersons =
-                consumers.reduce(
-                    (sum, person) =>
-                        sum + person.roomPeople,
-                    0
-                );
-
-
-            const totalRoomBill =
-                consumers.reduce(
-                    (sum, person) =>
-                        sum + person.roomBill,
-                    0
-                );
-
-
-            // CREATE RECORD
-
-            const record = {
-
-                id: Date.now(),
-
-                month: month,
-
-                billDate: billDate,
-
-                overallBill:
-                    overallBill,
-
-                totalRoomBill:
-                    totalRoomBill,
-
-                groundBill:
-                    groundBill,
-
-                groundPersons:
-                    groundPersons,
-
-                groundShare:
-                    groundShare,
-
-                consumers:
-                    consumers.map(
-                        person => ({
-
-                            name:
-                                person.name,
-
-                            past:
-                                person.past,
-
-                            current:
-                                person.current,
-
-                            units:
-                                person.units,
-
-                            roomBill:
-                                person.roomBill,
-
-                            roomPeople:
-                                person.roomPeople,
-
-                            finalBill:
-                                person.roomBill +
-                                (
-                                    groundShare *
-                                    person.roomPeople
-                                )
-
-                        })
-                    )
-
-            };
-
-
-            let history =
-                JSON.parse(
-                    localStorage.getItem(
-                        "electricityBillHistory"
-                    )
-                ) || [];
-
-
-            history.unshift(record);
-
-
-            localStorage.setItem(
-                "electricityBillHistory",
-                JSON.stringify(history)
-            );
-
-
-            alert(
-                "✅ Bill saved successfully!"
-            );
-
-
-            displayHistory();
-
-        }
-    );
+};
 
 
 // =====================================================
-// TOP HISTORY BUTTON
+// NEXT BUTTON
 // =====================================================
 
-document
-    .getElementById(
-        "topHistoryBtn"
-    )
-    .addEventListener(
-        "click",
-        () => {
+$("nextBtn").onclick = () => {
+
+    const error = validReadings();
 
 
-            displayHistory();
+    if (error) {
 
-
-            const historySection =
-                document.getElementById(
-                    "historySection"
-                );
-
-
-            historySection.style.display =
-                "block";
-
-
-            historySection.scrollIntoView({
-                behavior: "smooth"
-            });
-
-        }
-    );
-
-
-// =====================================================
-// CLOSE HISTORY
-// =====================================================
-
-document
-    .getElementById(
-        "closeHistoryBtn"
-    )
-    .addEventListener(
-        "click",
-        () => {
-
-
-            document.getElementById(
-                "historySection"
-            ).style.display =
-                "none";
-
-        }
-    );
-
-
-// =====================================================
-// DISPLAY HISTORY
-// =====================================================
-
-function displayHistory() {
-
-
-    const historyList =
-        document.getElementById(
-            "historyList"
-        );
-
-
-    const history =
-        JSON.parse(
-            localStorage.getItem(
-                "electricityBillHistory"
-            )
-        ) || [];
-
-
-    historyList.innerHTML = "";
-
-
-    if (history.length === 0) {
-
-
-        historyList.innerHTML = `
-
-            <div class="no-history">
-
-                <h3>
-                    No Bill History
-                </h3>
-
-                <p>
-                    Your saved bills will appear here.
-                </p>
-
-            </div>
-
-        `;
-
+        toast(error);
 
         return;
 
     }
 
 
-    history.forEach(record => {
+    renderGround();
+
+    showSlide(2);
+
+};
 
 
-        const card =
-            document.createElement(
-                "div"
+// =====================================================
+// BACK BUTTON
+// =====================================================
+
+$("backBtn").onclick = () => {
+
+    showSlide(1);
+
+};
+
+
+// =====================================================
+// STEP BUTTONS
+// =====================================================
+
+document
+    .querySelectorAll(".step")
+    .forEach(step => {
+
+        step.onclick = () => {
+
+            const number =
+                Number(step.dataset.step);
+
+
+            if (number === 2) {
+
+                const error =
+                    validReadings();
+
+
+                if (error) {
+
+                    toast(error);
+
+                    return;
+
+                }
+
+            }
+
+
+            showSlide(number);
+
+        };
+
+    });
+
+
+// =====================================================
+// OVERALL BILL
+// =====================================================
+
+function getOverall() {
+
+    return Number(
+        $("overallBill").value
+    ) || 0;
+
+}
+
+
+// =====================================================
+// BUILD GROUND TABLE
+// =====================================================
+
+function buildGroundRows() {
+
+    const body =
+        $("groundBody");
+
+
+    body.innerHTML = "";
+
+
+    const share =
+        Number(
+            $("sharePerPerson").dataset.value
+        ) || 0;
+
+
+    people.forEach((person, index) => {
+
+        const units =
+            Number(person.current) -
+            Number(person.past);
+
+
+        const roomBill =
+            units * RATE;
+
+
+        const multiplier =
+            currentGroundData
+                ?.multipliers
+                ?. [index] ?? 1;
+
+
+        const groundAmount =
+            share * multiplier;
+
+
+        const finalBill =
+            roomBill + groundAmount;
+
+
+        const row =
+            document.createElement("tr");
+
+
+        row.innerHTML = `
+
+            <td>
+                ${index + 1}
+            </td>
+
+
+            <td>
+                <b>
+                    ${escapeHTML(person.name)}
+                </b>
+            </td>
+
+
+            <td>
+                ${money(roomBill)}
+            </td>
+
+
+            <td>
+
+                <input
+                    class="multiplier-input"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value="${multiplier}"
+                    data-multiplier="${index}"
+                    title="Ground bill multiplier"
+                >
+
+            </td>
+
+
+            <td class="ground-amount">
+
+                ${money(groundAmount)}
+
+            </td>
+
+
+            <td>
+
+                <strong>
+                    ${money(finalBill)}
+                </strong>
+
+            </td>
+
+        `;
+
+
+        body.appendChild(row);
+
+    });
+
+
+    // =================================================
+    // MULTIPLIER INPUT
+    // =================================================
+
+    body
+        .querySelectorAll("[data-multiplier]")
+        .forEach(input => {
+
+            input.addEventListener(
+                "input",
+                event => {
+
+                    const index =
+                        Number(
+                            event.target.dataset.multiplier
+                        );
+
+
+                    let value =
+                        Math.max(
+                            0,
+                            Math.floor(
+                                Number(
+                                    event.target.value
+                                ) || 0
+                            )
+                        );
+
+
+                    if (!currentGroundData) {
+
+                        currentGroundData = {
+                            multipliers: []
+                        };
+
+                    }
+
+
+                    currentGroundData
+                        .multipliers[index] =
+                        value;
+
+
+                    renderGround(false);
+
+                }
+            );
+
+        });
+
+}
+
+
+// =====================================================
+// GROUND CALCULATION
+// =====================================================
+
+function renderGround(reset = false) {
+
+    const result = totals();
+
+
+    $("groundRoomBill").textContent =
+        money(result.room);
+
+
+    $("groundRoomTotal2").textContent =
+        money(result.room);
+
+
+    const overall =
+        getOverall();
+
+
+    const ground =
+        overall - result.room;
+
+
+    $("groundBillDisplay").textContent =
+        money(ground);
+
+
+    // =================================================
+    // DEFAULT MULTIPLIERS
+    // =================================================
+
+    if (
+        reset ||
+        !currentGroundData ||
+        currentGroundData.multipliers.length !==
+        people.length
+    ) {
+
+        currentGroundData = {
+
+            multipliers:
+                people.map(() => 1)
+
+        };
+
+    }
+
+
+    // =================================================
+    // DIVIDE BY
+    // =================================================
+
+    let divideBy =
+        Math.max(
+            1,
+            Math.floor(
+                Number(
+                    $("divideBy").value
+                ) || 1
+            )
+        );
+
+
+    // =================================================
+    // SHARE PER PERSON
+    // =================================================
+
+    const share =
+        ground / divideBy;
+
+
+    $("sharePerPerson").textContent =
+        money(share);
+
+
+    $("sharePerPerson")
+        .dataset.value =
+        share;
+
+
+    $("shareFormula").textContent =
+        `${money(ground)} ÷ ${divideBy}`;
+
+
+    // =================================================
+    // GROUND ROWS
+    // =================================================
+
+    buildGroundRows();
+
+
+    // =================================================
+    // TOTAL MULTIPLIERS
+    // =================================================
+
+    const multiplierTotal =
+        currentGroundData
+            .multipliers
+            .reduce(
+                (total, value) =>
+                    total + (Number(value) || 0),
+                0
             );
 
 
-        card.className =
-            "history-card";
+    const groundTotal =
+        share * multiplierTotal;
 
 
-        let consumerRows = "";
+    const finalTotal =
+        result.room + groundTotal;
 
 
-        record.consumers.forEach(
-            person => {
+    $("multiplierTotal").textContent =
+        multiplierTotal;
 
 
-                const people =
-                    person.roomPeople || 1;
+    $("groundTotal2").textContent =
+        money(groundTotal);
 
 
-                const roomGroundShare =
-                    record.groundShare *
-                    people;
+    $("finalTotal").textContent =
+        money(finalTotal);
 
 
-                consumerRows += `
+    $("finalOverall").textContent =
+        money(overall);
+
+
+    $("finalRoom").textContent =
+        money(result.room);
+
+
+    $("finalGround").textContent =
+        money(groundTotal);
+
+
+    $("finalTotalBig").textContent =
+        money(finalTotal);
+
+
+    // =================================================
+    // WARNING IF MULTIPLIERS DON'T MATCH DIVIDE BY
+    // =================================================
+
+    const mismatch =
+        Math.abs(
+            multiplierTotal - divideBy
+        ) > 0.0001;
+
+
+    $("multiplierTotal").style.color =
+        mismatch
+            ? "#e11d48"
+            : "";
+
+
+    $("multiplierTotal").title =
+        mismatch
+            ? `
+                Multipliers total ${multiplierTotal},
+                but Divide By is ${divideBy}.
+                Adjust the multipliers if you want
+                the final total to equal the overall bill.
+              `
+            : "";
+
+}
+
+
+// =====================================================
+// GROUND INPUT EVENTS
+// =====================================================
+
+$("overallBill")
+    .addEventListener(
+        "input",
+        () => renderGround()
+    );
+
+
+$("divideBy")
+    .addEventListener(
+        "input",
+        () => renderGround()
+    );
+
+
+// =====================================================
+// ADD GROUND PERSON
+// =====================================================
+
+$("addGroundPersonBtn").onclick = () => {
+
+    people.push({
+        name: "",
+        past: "",
+        current: ""
+    });
+
+
+    currentGroundData = null;
+
+
+    renderReadings();
+
+
+    toast(
+        "New person added. Enter their meter readings."
+    );
+
+
+    renderGround();
+
+};
+
+
+// =====================================================
+// ESCAPE HTML
+// =====================================================
+
+function escapeHTML(value) {
+
+    return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+// =====================================================
+// BILL DATA
+// =====================================================
+
+function billData() {
+
+    const result =
+        totals();
+
+
+    const overall =
+        getOverall();
+
+
+    const ground =
+        overall - result.room;
+
+
+    const divideBy =
+        Math.max(
+            1,
+            Math.floor(
+                Number(
+                    $("divideBy").value
+                ) || 1
+            )
+        );
+
+
+    const share =
+        ground / divideBy;
+
+
+    const multipliers =
+        currentGroundData
+            ?.multipliers
+            ?.slice() ||
+        people.map(() => 1);
+
+
+    const rows =
+        people.map(
+            (person, index) => {
+
+                const units =
+                    Number(person.current) -
+                    Number(person.past);
+
+
+                const roomBill =
+                    units * RATE;
+
+
+                const multiplier =
+                    Number(
+                        multipliers[index]
+                    ) || 0;
+
+
+                const groundAmount =
+                    share * multiplier;
+
+
+                const finalBill =
+                    roomBill +
+                    groundAmount;
+
+
+                return {
+
+                    name: person.name,
+
+                    past:
+                        Number(person.past),
+
+                    current:
+                        Number(person.current),
+
+                    units,
+
+                    roomBill,
+
+                    multiplier,
+
+                    groundAmount,
+
+                    finalBill
+
+                };
+
+            }
+        );
+
+
+    const multiplierTotal =
+        multipliers.reduce(
+            (total, value) =>
+                total + (Number(value) || 0),
+            0
+        );
+
+
+    const finalTotal =
+        rows.reduce(
+            (total, row) =>
+                total + row.finalBill,
+            0
+        );
+
+
+    return {
+
+        month:
+            $("billMonth").value,
+
+        date:
+            $("billDate").value,
+
+        rate:
+            RATE,
+
+        overallBill:
+            overall,
+
+        totalUnits:
+            result.units,
+
+        totalRoomBill:
+            result.room,
+
+        groundBill:
+            ground,
+
+        divideBy,
+
+        sharePerPerson:
+            share,
+
+        multiplierTotal,
+
+        finalTotal,
+
+        rows
+
+    };
+
+}
+
+
+// =====================================================
+// DATE FORMAT
+// =====================================================
+
+function formatDate(value) {
+
+    if (!value) {
+        return "";
+    }
+
+
+    const [
+        year,
+        month,
+        day
+    ] = value.split("-");
+
+
+    return `${day}-${month}-${year}`;
+
+}
+
+
+// =====================================================
+// MONTH NAME
+// =====================================================
+
+function monthName(value) {
+
+    if (!value) {
+        return "";
+    }
+
+
+    const [
+        year,
+        month
+    ] = value.split("-");
+
+
+    return new Date(
+        Number(year),
+        Number(month) - 1,
+        1
+    ).toLocaleString(
+        "en-IN",
+        {
+            month: "long",
+            year: "numeric"
+        }
+    );
+
+}
+
+
+// =====================================================
+// CREATE DOWNLOAD BILL
+// =====================================================
+
+function createBillElement(data) {
+
+    const element =
+        document.createElement("div");
+
+
+    element.className =
+        "print-bill";
+
+
+    element.style.cssText = `
+        width:794px;
+        background:#fff;
+        color:#111827;
+        padding:38px;
+        font-family:Arial,sans-serif;
+        position:absolute;
+        left:-10000px;
+        top:0;
+    `;
+
+
+    element.innerHTML = `
+
+        <div
+            style="
+                border-bottom:3px solid #4f46e5;
+                padding-bottom:16px;
+                display:flex;
+                justify-content:space-between;
+                align-items:end;
+            "
+        >
+
+            <div>
+
+                <h1
+                    style="
+                        margin:0;
+                        color:#312e81;
+                        font-size:28px;
+                    "
+                >
+                    ⚡ Electricity Bill
+                </h1>
+
+                <p
+                    style="
+                        margin:5px 0 0;
+                        color:#64748b;
+                    "
+                >
+                    Individual bill statement
+                </p>
+
+            </div>
+
+
+            <div
+                style="
+                    text-align:right;
+                    font-size:13px;
+                "
+            >
+
+                <b>
+                    ${monthName(data.month)}
+                </b>
+
+                <br>
+
+                ${formatDate(data.date)}
+
+            </div>
+
+        </div>
+
+
+        <div
+            style="
+                display:grid;
+                grid-template-columns:1fr 1fr;
+                gap:12px;
+                margin:20px 0;
+            "
+        >
+
+            <div
+                style="
+                    background:#eef2ff;
+                    padding:14px;
+                    border-radius:10px;
+                "
+            >
+
+                <b>
+                    Total Electricity Bill
+                </b>
+
+                <div
+                    style="
+                        font-size:22px;
+                        margin-top:6px;
+                    "
+                >
+                    ${money(data.overallBill)}
+                </div>
+
+            </div>
+
+
+            <div
+                style="
+                    background:#ecfdf5;
+                    padding:14px;
+                    border-radius:10px;
+                "
+            >
+
+                <b>
+                    Ground Bill
+                </b>
+
+                <div
+                    style="
+                        font-size:22px;
+                        margin-top:6px;
+                    "
+                >
+                    ${money(data.groundBill)}
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <table
+            style="
+                width:100%;
+                border-collapse:collapse;
+                font-size:12px;
+            "
+        >
+
+            <thead>
+
+                <tr
+                    style="
+                        background:#eef2ff;
+                    "
+                >
+
+                    <th style="padding:10px;border:1px solid #dbe3f0">
+                        Name
+                    </th>
+
+                    <th style="padding:10px;border:1px solid #dbe3f0">
+                        Reading
+                    </th>
+
+                    <th style="padding:10px;border:1px solid #dbe3f0">
+                        Units
+                    </th>
+
+                    <th style="padding:10px;border:1px solid #dbe3f0">
+                        Room Bill
+                    </th>
+
+                    <th style="padding:10px;border:1px solid #dbe3f0">
+                        Ground ×
+                    </th>
+
+                    <th style="padding:10px;border:1px solid #dbe3f0">
+                        Ground
+                    </th>
+
+                    <th style="padding:10px;border:1px solid #dbe3f0">
+                        Final
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody>
+
+                ${data.rows.map(row => `
 
                     <tr>
 
-                        <td>
-                            ${escapeHTML(
-                                person.name
-                            )}
+                        <td style="padding:9px;border:1px solid #dbe3f0">
+                            ${escapeHTML(row.name)}
                         </td>
 
-                        <td>
-                            ${person.past}
+                        <td style="padding:9px;border:1px solid #dbe3f0">
+                            ${row.past} → ${row.current}
                         </td>
 
-                        <td>
-                            ${person.current}
+                        <td style="padding:9px;border:1px solid #dbe3f0;text-align:center">
+                            ${row.units}
                         </td>
 
-                        <td>
-                            ${person.units}
+                        <td style="padding:9px;border:1px solid #dbe3f0;text-align:right">
+                            ${money(row.roomBill)}
                         </td>
 
-                        <td>
-                            ${formatMoney(
-                                person.roomBill
-                            )}
+                        <td style="padding:9px;border:1px solid #dbe3f0;text-align:center">
+                            ×${row.multiplier}
                         </td>
 
-                        <td>
-                            ${people}
+                        <td style="padding:9px;border:1px solid #dbe3f0;text-align:right">
+                            ${money(row.groundAmount)}
                         </td>
 
-                        <td>
-                            ${formatMoney(
-                                roomGroundShare
-                            )}
-                        </td>
-
-                        <td>
-                            ${formatMoney(
-                                person.finalBill
-                            )}
+                        <td style="padding:9px;border:1px solid #dbe3f0;text-align:right;font-weight:bold">
+                            ${money(row.finalBill)}
                         </td>
 
                     </tr>
 
-                `;
+                `).join("")}
 
-            }
-        );
-
-
-        card.innerHTML = `
-
-            <h3>
-                📅
-                ${formatMonth(record.month)}
-            </h3>
+            </tbody>
 
 
-            <p>
+            <tfoot>
 
-                🗓 Bill Date:
-
-                <strong>
-                    ${formatDate(
-                        record.billDate
-                    )}
-                </strong>
-
-            </p>
-
-
-            <p>
-
-                💰 Overall Bill:
-
-                <strong>
-                    ${formatMoney(
-                        record.overallBill
-                    )}
-                </strong>
-
-            </p>
-
-
-            <p>
-
-                🏠 Total Room Bill:
-
-                <strong>
-                    ${formatMoney(
-                        record.totalRoomBill
-                    )}
-                </strong>
-
-            </p>
-
-
-            <p>
-
-                🌱 Ground Bill:
-
-                <strong>
-                    ${formatMoney(
-                        record.groundBill
-                    )}
-                </strong>
-
-            </p>
-
-
-            <p>
-
-                👥 Ground divided among:
-
-                <strong>
-                    ${record.groundPersons}
-                    persons
-                </strong>
-
-            </p>
-
-
-            <p>
-
-                💵 Ground Share:
-
-                <strong>
-                    ${formatMoney(
-                        record.groundShare
-                    )}
-                    per person
-                </strong>
-
-            </p>
-
-
-            <div class="table-wrapper">
-
-                <table>
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Name
-                            </th>
-
-                            <th>
-                                Past
-                            </th>
-
-                            <th>
-                                Current
-                            </th>
-
-                            <th>
-                                Units
-                            </th>
-
-                            <th>
-                                Room Bill
-                            </th>
-
-                            <th>
-                                People
-                            </th>
-
-                            <th>
-                                Ground Share
-                            </th>
-
-                            <th>
-                                Final Bill
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody>
-
-                        ${consumerRows}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-
-            <div class="history-actions">
-
-                <button
-                    class="delete-history-btn"
-                    onclick="deleteHistory(${record.id})"
+                <tr
+                    style="
+                        font-weight:bold;
+                    "
                 >
-                    🗑 Delete This Bill
-                </button>
 
-            </div>
+                    <td
+                        colspan="2"
+                        style="
+                            padding:10px;
+                            border:1px solid #dbe3f0;
+                        "
+                    >
+                        TOTAL
+                    </td>
 
-        `;
+                    <td
+                        style="
+                            padding:10px;
+                            border:1px solid #dbe3f0;
+                        "
+                    >
+                        ${data.totalUnits}
+                    </td>
+
+                    <td
+                        style="
+                            padding:10px;
+                            border:1px solid #dbe3f0;
+                        "
+                    >
+                        ${money(data.totalRoomBill)}
+                    </td>
+
+                    <td
+                        style="
+                            padding:10px;
+                            border:1px solid #dbe3f0;
+                        "
+                    >
+                        ${data.multiplierTotal}
+                    </td>
+
+                    <td
+                        style="
+                            padding:10px;
+                            border:1px solid #dbe3f0;
+                        "
+                    >
+                        ${money(data.groundBill)}
+                    </td>
+
+                    <td
+                        style="
+                            padding:10px;
+                            border:1px solid #dbe3f0;
+                        "
+                    >
+                        ${money(data.finalTotal)}
+                    </td>
+
+                </tr>
+
+            </tfoot>
+
+        </table>
 
 
-        historyList.appendChild(
-            card
-        );
+        <div
+            style="
+                margin-top:18px;
+                padding:14px;
+                background:#f8fafc;
+                border-radius:10px;
+                font-size:13px;
+            "
+        >
 
-    });
+            <b>
+                Ground calculation:
+            </b>
+
+            ${money(data.groundBill)}
+            ÷
+            ${data.divideBy}
+
+            =
+
+            <b>
+                ${money(data.sharePerPerson)}
+            </b>
+
+            per share
+
+        </div>
+
+
+        <div
+            style="
+                margin-top:28px;
+                border-top:1px solid #e2e8f0;
+                padding-top:12px;
+                font-size:11px;
+                color:#64748b;
+                display:flex;
+                justify-content:space-between;
+            "
+        >
+
+            <span>
+                Rate: ₹${data.rate} per unit
+            </span>
+
+            <span>
+                Made by Shubham Srivastava
+            </span>
+
+        </div>
+
+    `;
+
+
+    document.body.appendChild(element);
+
+
+    return element;
 
 }
 
 
 // =====================================================
-// DELETE HISTORY
+// DOWNLOAD IMAGE
 // =====================================================
 
-function deleteHistory(id) {
+async function downloadImage() {
+
+    const data =
+        billData();
 
 
-    const confirmation =
-        confirm(
-            "Are you sure you want to delete this bill?"
+    if (data.overallBill <= 0) {
+
+        toast(
+            "Enter the overall electricity bill first."
         );
-
-
-    if (!confirmation) {
 
         return;
 
     }
 
 
-    let history =
-        JSON.parse(
-            localStorage.getItem(
-                "electricityBillHistory"
-            )
-        ) || [];
+    const element =
+        createBillElement(data);
 
 
-    history =
-        history.filter(
-            record =>
-                record.id !== id
+    try {
+
+        const canvas =
+            await html2canvas(
+                element,
+                {
+                    scale: 2,
+                    backgroundColor: "#fff"
+                }
+            );
+
+
+        const link =
+            document.createElement("a");
+
+
+        link.download =
+            `electricity-bill-${data.month || "bill"}.png`;
+
+
+        link.href =
+            canvas.toDataURL("image/png");
+
+
+        link.click();
+
+
+        toast(
+            "Bill image downloaded."
         );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        toast(
+            "Image download failed."
+        );
+
+    }
+
+    finally {
+
+        element.remove();
+
+    }
+
+}
+
+
+// =====================================================
+// DOWNLOAD PDF
+// =====================================================
+
+async function downloadPDF() {
+
+    const data =
+        billData();
+
+
+    if (data.overallBill <= 0) {
+
+        toast(
+            "Enter the overall electricity bill first."
+        );
+
+        return;
+
+    }
+
+
+    const element =
+        createBillElement(data);
+
+
+    try {
+
+        const canvas =
+            await html2canvas(
+                element,
+                {
+                    scale: 2,
+                    backgroundColor: "#fff"
+                }
+            );
+
+
+        const {
+            jsPDF
+        } = window.jspdf;
+
+
+        const pdf =
+            new jsPDF(
+                "p",
+                "mm",
+                "a4"
+            );
+
+
+        const pageWidth = 210;
+        const pageHeight = 297;
+        const margin = 10;
+
+        const imageWidth =
+            pageWidth - margin * 2;
+
+        const imageHeight =
+            canvas.height *
+            imageWidth /
+            canvas.width;
+
+
+        let sourceY = 0;
+
+        let remainingHeight =
+            imageHeight;
+
+
+        while (remainingHeight > 0) {
+
+            const sliceHeight =
+                Math.min(
+                    remainingHeight,
+                    pageHeight - margin * 2
+                );
+
+
+            const sourceHeight =
+                Math.round(
+                    sliceHeight *
+                    canvas.width /
+                    imageWidth
+                );
+
+
+            const slice =
+                document.createElement(
+                    "canvas"
+                );
+
+
+            slice.width =
+                canvas.width;
+
+
+            slice.height =
+                sourceHeight;
+
+
+            const context =
+                slice.getContext("2d");
+
+
+            context.drawImage(
+                canvas,
+                0,
+                sourceY,
+                canvas.width,
+                sourceHeight,
+                0,
+                0,
+                slice.width,
+                slice.height
+            );
+
+
+            pdf.addImage(
+                slice.toDataURL("image/png"),
+                "PNG",
+                margin,
+                margin,
+                imageWidth,
+                sliceHeight
+            );
+
+
+            remainingHeight -=
+                sliceHeight;
+
+
+            sourceY +=
+                sourceHeight;
+
+
+            if (remainingHeight > 0) {
+
+                pdf.addPage();
+
+            }
+
+        }
+
+
+        pdf.save(
+            `electricity-bill-${data.month || "bill"}.pdf`
+        );
+
+
+        toast(
+            "Bill PDF downloaded."
+        );
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        toast(
+            "PDF download failed."
+        );
+
+    }
+
+    finally {
+
+        element.remove();
+
+    }
+
+}
+
+
+// =====================================================
+// DOWNLOAD EVENTS
+// =====================================================
+
+$("downloadImage")
+    .onclick =
+    downloadImage;
+
+
+$("downloadPdf")
+    .onclick =
+    downloadPDF;
+
+
+// =====================================================
+// HISTORY
+// =====================================================
+
+const HISTORY_KEY =
+    "electricityBillSplitterHistoryV2";
+
+
+function getHistory() {
+
+    try {
+
+        return JSON.parse(
+            localStorage.getItem(
+                HISTORY_KEY
+            ) || "[]"
+        );
+
+    }
+
+    catch {
+
+        return [];
+
+    }
+
+}
+
+
+// =====================================================
+// SAVE BILL
+// =====================================================
+
+function saveBill() {
+
+    const data =
+        billData();
+
+
+    if (data.overallBill <= 0) {
+
+        toast(
+            "Enter the overall electricity bill first."
+        );
+
+        return;
+
+    }
+
+
+    const history =
+        getHistory();
+
+
+    history.unshift({
+
+        ...data,
+
+        id: Date.now()
+
+    });
 
 
     localStorage.setItem(
-        "electricityBillHistory",
-        JSON.stringify(history)
+        HISTORY_KEY,
+        JSON.stringify(
+            history.slice(0, 100)
+        )
     );
 
 
-    displayHistory();
+    toast(
+        "Bill saved to history."
+    );
+
+
+    renderHistory();
 
 }
 
 
-// =====================================================
-// PDF DOWNLOAD
-// =====================================================
-
-document
-    .getElementById(
-        "pdfBtn"
-    )
-    .addEventListener(
-        "click",
-        async () => {
-
-
-            const result =
-                document.getElementById(
-                    "result"
-                );
-
-
-            const finalSection =
-                document.getElementById(
-                    "finalSection"
-                );
-
-
-            if (
-                finalSection.style.display !==
-                "block"
-            ) {
-
-                alert(
-                    "Please calculate the Ground Share first."
-                );
-
-                return;
-            }
-
-
-            try {
-
-
-                const canvas =
-                    await html2canvas(
-                        result,
-                        {
-
-                            scale: 2,
-
-                            backgroundColor:
-                                "#ffffff",
-
-                            useCORS: true
-
-                        }
-                    );
-
-
-                const imageData =
-                    canvas.toDataURL(
-                        "image/png"
-                    );
-
-
-                const {
-                    jsPDF
-                } =
-                    window.jspdf;
-
-
-                const pdf =
-                    new jsPDF(
-                        "p",
-                        "mm",
-                        "a4"
-                    );
-
-
-                const pageWidth =
-                    pdf.internal.pageSize
-                        .getWidth();
-
-
-                const pageHeight =
-                    pdf.internal.pageSize
-                        .getHeight();
-
-
-                const margin = 8;
-
-
-                const imageWidth =
-                    pageWidth -
-                    (margin * 2);
-
-
-                const imageHeight =
-                    (
-                        canvas.height *
-                        imageWidth
-                    ) /
-                    canvas.width;
-
-
-                let heightLeft =
-                    imageHeight;
-
-
-                let position =
-                    margin;
-
-
-                pdf.addImage(
-                    imageData,
-                    "PNG",
-                    margin,
-                    position,
-                    imageWidth,
-                    imageHeight
-                );
-
-
-                heightLeft -=
-                    pageHeight -
-                    (margin * 2);
-
-
-                while (
-                    heightLeft > 0
-                ) {
-
-
-                    position =
-                        heightLeft -
-                        imageHeight +
-                        margin;
-
-
-                    pdf.addPage();
-
-
-                    pdf.addImage(
-                        imageData,
-                        "PNG",
-                        margin,
-                        position,
-                        imageWidth,
-                        imageHeight
-                    );
-
-
-                    heightLeft -=
-                        pageHeight -
-                        (margin * 2);
-
-                }
-
-
-                pdf.save(
-                    "Electricity-Bill.pdf"
-                );
-
-
-            } catch (error) {
-
-
-                console.error(
-                    error
-                );
-
-
-                alert(
-                    "Unable to create PDF. Please try again."
-                );
-
-            }
-
-        }
-    );
+$("saveHistory")
+    .onclick =
+    saveBill;
 
 
 // =====================================================
-// IMAGE DOWNLOAD
+// RENDER HISTORY
 // =====================================================
 
-document
-    .getElementById(
-        "imageBtn"
-    )
-    .addEventListener(
-        "click",
-        async () => {
+function renderHistory() {
+
+    const box =
+        $("historyContent");
 
 
-            const result =
-                document.getElementById(
-                    "result"
-                );
+    const history =
+        getHistory();
 
 
-            const finalSection =
-                document.getElementById(
-                    "finalSection"
-                );
+    if (!history.length) {
 
+        box.innerHTML = `
 
-            if (
-                finalSection.style.display !==
-                "block"
-            ) {
+            <div class="empty-history">
 
-                alert(
-                    "Please calculate the Ground Share first."
-                );
+                📭
 
-                return;
-            }
+                <br>
+                <br>
 
+                No saved bills yet.
 
-            try {
+            </div>
 
+        `;
 
-                const canvas =
-                    await html2canvas(
-                        result,
-                        {
-
-                            scale: 2,
-
-                            backgroundColor:
-                                "#ffffff",
-
-                            useCORS: true
-
-                        }
-                    );
-
-
-                const link =
-                    document.createElement(
-                        "a"
-                    );
-
-
-                link.download =
-                    "Electricity-Bill.png";
-
-
-                link.href =
-                    canvas.toDataURL(
-                        "image/png"
-                    );
-
-
-                link.click();
-
-
-            } catch (error) {
-
-
-                console.error(
-                    error
-                );
-
-
-                alert(
-                    "Unable to create image. Please try again."
-                );
-
-            }
-
-        }
-    );
-
-
-// =====================================================
-// HELPER FUNCTIONS
-// =====================================================
-
-
-// MONEY
-
-function formatMoney(amount) {
-
-    return (
-        "₹" +
-        Number(amount).toFixed(2)
-    );
-
-}
-
-
-// MONTH
-
-function formatMonth(month) {
-
-
-    if (!month) {
-
-        return "-";
+        return;
 
     }
 
 
-    const date =
-        new Date(
-            month +
-            "-01T00:00:00"
+    box.innerHTML = `
+
+        <div
+            style="
+                text-align:right;
+                margin-bottom:10px;
+            "
+        >
+
+            <button
+                class="clear-history"
+                id="clearHistory"
+            >
+                Clear All History
+            </button>
+
+        </div>
+
+
+        ${history.map(record => `
+
+            <div class="history-item">
+
+                <div>
+
+                    <h3>
+
+                        ${
+                            monthName(record.month)
+                            || "Bill"
+                        }
+
+                        •
+
+                        ${
+                            formatDate(
+                                record.date
+                            )
+                        }
+
+                    </h3>
+
+
+                    <p>
+
+                        Overall:
+                        <b>
+                            ${money(record.overallBill)}
+                        </b>
+
+                        •
+
+                        Room:
+                        ${money(record.totalRoomBill)}
+
+                        •
+
+                        Ground:
+                        ${money(record.groundBill)}
+
+                        •
+
+                        Final:
+                        <b>
+                            ${money(record.finalTotal)}
+                        </b>
+
+                    </p>
+
+                </div>
+
+
+                <div class="history-actions">
+
+                    <button
+                        class="view-h"
+                        data-view="${record.id}"
+                    >
+                        View
+                    </button>
+
+
+                    <button
+                        class="delete-h"
+                        data-delete-history="${record.id}"
+                    >
+                        Delete
+                    </button>
+
+                </div>
+
+            </div>
+
+        `).join("")}
+
+    `;
+
+
+    // =================================================
+    // CLEAR HISTORY
+    // =================================================
+
+    const clearButton =
+        box.querySelector(
+            "#clearHistory"
         );
 
 
-    return date.toLocaleDateString(
-        "en-IN",
-        {
+    clearButton.onclick = () => {
 
-            month: "long",
+        if (
+            confirm(
+                "Clear all saved bills?"
+            )
+        ) {
 
-            year: "numeric"
+            localStorage.removeItem(
+                HISTORY_KEY
+            );
+
+
+            renderHistory();
+
+
+            toast(
+                "History cleared."
+            );
 
         }
-    );
+
+    };
+
+
+    // =================================================
+    // DELETE INDIVIDUAL HISTORY
+    // =================================================
+
+    box
+        .querySelectorAll(
+            "[data-delete-history]"
+        )
+        .forEach(button => {
+
+            button.onclick = () => {
+
+                const id =
+                    Number(
+                        button.dataset
+                            .deleteHistory
+                    );
+
+
+                const updated =
+                    getHistory()
+                        .filter(
+                            record =>
+                                record.id !== id
+                        );
+
+
+                localStorage.setItem(
+                    HISTORY_KEY,
+                    JSON.stringify(updated)
+                );
+
+
+                renderHistory();
+
+
+                toast(
+                    "Bill deleted."
+                );
+
+            };
+
+        });
+
+
+    // =================================================
+    // VIEW HISTORY
+    // =================================================
+
+    box
+        .querySelectorAll(
+            "[data-view]"
+        )
+        .forEach(button => {
+
+            button.onclick = () => {
+
+                showHistoryBill(
+                    Number(
+                        button.dataset.view
+                    )
+                );
+
+            };
+
+        });
 
 }
 
 
-// DATE
+// =====================================================
+// SHOW HISTORY BILL
+// =====================================================
 
-function formatDate(dateValue) {
+function showHistoryBill(id) {
+
+    const record =
+        getHistory()
+            .find(
+                item =>
+                    item.id === id
+            );
 
 
-    if (!dateValue) {
-
-        return "-";
-
+    if (!record) {
+        return;
     }
 
 
-    const date =
-        new Date(
-            dateValue +
-            "T00:00:00"
-        );
+    const element =
+        createBillElement(record);
 
 
-    return date.toLocaleDateString(
-        "en-IN",
-        {
-
-            day: "2-digit",
-
-            month: "long",
-
-            year: "numeric"
-
-        }
-    );
-
-}
+    element.style.position =
+        "relative";
 
 
-// SAFE HTML
+    element.style.left =
+        "auto";
 
-function escapeHTML(text) {
+
+    element.style.top =
+        "auto";
 
 
-    const div =
+    element.style.width =
+        "100%";
+
+
+    element.style.maxWidth =
+        "794px";
+
+
+    element.style.margin =
+        "20px auto";
+
+
+    element
+        .querySelectorAll("table")
+        .forEach(table => {
+
+            table.style.fontSize =
+                "11px";
+
+        });
+
+
+    $("historyContent")
+        .innerHTML = "";
+
+
+    $("historyContent")
+        .appendChild(element);
+
+
+    const backButton =
         document.createElement(
-            "div"
+            "button"
         );
 
 
-    div.textContent =
-        text;
+    backButton.textContent =
+        "← Back to History";
 
 
-    return div.innerHTML;
+    backButton.className =
+        "clear-history";
+
+
+    backButton.style.marginBottom =
+        "10px";
+
+
+    backButton.onclick =
+        renderHistory;
+
+
+    $("historyContent")
+        .prepend(backButton);
 
 }
+
+
+// =====================================================
+// HISTORY OPEN/CLOSE
+// =====================================================
+
+$("historyBtn").onclick = () => {
+
+    $("historyPanel")
+        .classList.add("open");
+
+
+    renderHistory();
+
+};
+
+
+$("closeHistory").onclick = () => {
+
+    $("historyPanel")
+        .classList.remove("open");
+
+};
+
+
+// =====================================================
+// DARK MODE
+// =====================================================
+
+$("themeBtn").onclick = () => {
+
+    document.body.classList.toggle(
+        "dark"
+    );
+
+
+    $("themeBtn").textContent =
+        document.body.classList.contains("dark")
+            ? "🌙"
+            : "☀️";
+
+
+    localStorage.setItem(
+        "billTheme",
+        document.body.classList.contains("dark")
+            ? "dark"
+            : "light"
+    );
+
+};
+
+
+if (
+    localStorage.getItem(
+        "billTheme"
+    ) === "dark"
+) {
+
+    document.body.classList.add(
+        "dark"
+    );
+
+
+    $("themeBtn").textContent =
+        "🌙";
+
+}
+
+
+// =====================================================
+// INITIAL LOAD
+// =====================================================
+
+renderReadings();
+
+renderGround(true);
