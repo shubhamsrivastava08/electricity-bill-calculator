@@ -2,801 +2,859 @@
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Electricity Bill Splitter</title>
 
-    <title>Electricity Bill Calculator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
     <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
-        href="style.css"
     >
 
-    <!-- PDF & Image Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
+    <link rel="stylesheet" href="style.css">
 </head>
-
 
 <body>
 
+    <div class="app-shell">
 
-<div class="container">
+        <!-- ================= HEADER ================= -->
 
+        <header class="topbar">
 
-    <!-- ================= HEADER ================= -->
+            <div class="brand">
 
-    <header class="main-header">
+                <div class="brand-icon">
+                    ⚡
+                </div>
 
-        <div class="icon">
-            ⚡
-        </div>
-
-        <h1>
-            Electricity Bill Calculator
-        </h1>
-
-        <p>
-            Simple and detailed room electricity bill calculator
-        </p>
-
-
-        <!-- HISTORY BUTTON AVAILABLE FROM START -->
-
-        <button
-            type="button"
-            id="topHistoryBtn"
-            class="top-history-btn"
-        >
-            📚 Bill History
-        </button>
-
-    </header>
-
-
-
-    <!-- ================= BILL INFORMATION ================= -->
-
-    <section class="card">
-
-        <h2>
-            📋 Bill Information
-        </h2>
-
-
-        <div class="input-grid">
-
-
-            <!-- MONTH -->
-
-            <div class="input-group">
-
-                <label for="billMonth">
-                    Bill Month
-                </label>
-
-                <input
-                    type="month"
-                    id="billMonth"
-                >
-
-            </div>
-
-
-
-            <!-- DATE -->
-
-            <div class="input-group">
-
-                <label for="billDate">
-                    Bill Date
-                </label>
-
-                <input
-                    type="date"
-                    id="billDate"
-                >
-
-            </div>
-
-
-
-            <!-- OVERALL BILL -->
-
-            <div class="input-group full-width">
-
-                <label for="overallBill">
-                    Overall Electricity Bill
-                </label>
-
-
-                <div class="amount-input">
-
-                    <span>
-                        ₹
-                    </span>
-
-                    <input
-                        type="number"
-                        id="overallBill"
-                        placeholder="Enter total bill amount"
-                        min="0"
-                        step="0.01"
-                    >
-
+                <div>
+                    <h1>Electricity Bill Splitter</h1>
+                    <p>Simple • Fair • Transparent</p>
                 </div>
 
             </div>
 
 
-        </div>
+            <!-- STEP NAVIGATION -->
 
-    </section>
-
-
-
-    <!-- ================= CONSUMER DETAILS ================= -->
-
-    <section class="card">
-
-
-        <div class="section-header">
-
-
-            <div>
-
-                <h2>
-                    👥 Consumer Details
-                </h2>
-
-                <p class="section-description">
-                    Add the name, meter readings, and number of people living in each room.
-                </p>
-
-            </div>
-
-
-            <button
-                type="button"
-                id="addConsumer"
-                class="add-btn"
-            >
-                + Add Consumer
-            </button>
-
-
-        </div>
-
-
-
-        <!-- TABLE HEAD -->
-
-        <div class="consumer-heading">
-
-            <div>
-                Consumer Name
-            </div>
-
-            <div>
-                Past Reading
-            </div>
-
-            <div>
-                Current Reading
-            </div>
-
-            <div>
-                People in Room
-            </div>
-
-            <div>
-                Action
-            </div>
-
-        </div>
-
-
-
-        <!-- CONSUMER ROWS -->
-
-        <div id="consumerContainer">
-
-
-            <div class="consumer-row">
-
-
-                <input
-                    type="text"
-                    class="consumer-name"
-                    placeholder="Enter name"
-                >
-
-
-                <input
-                    type="number"
-                    class="past-reading"
-                    placeholder="Past reading"
-                    min="0"
-                >
-
-
-                <input
-                    type="number"
-                    class="current-reading"
-                    placeholder="Current reading"
-                    min="0"
-                >
-
-
-                <input
-                    type="number"
-                    class="room-people"
-                    value="1"
-                    min="1"
-                    step="1"
-                    title="Number of people living in this room"
-                >
-
+            <div class="stepper">
 
                 <button
+                    class="step active"
+                    data-step="1"
                     type="button"
-                    class="remove-btn"
-                    onclick="removeConsumer(this)"
-                    title="Remove consumer"
                 >
-                    ×
+                    <span>1</span>
+                    <b>Meter Readings</b>
                 </button>
 
+                <div class="step-line"></div>
+
+                <button
+                    class="step"
+                    data-step="2"
+                    type="button"
+                >
+                    <span>2</span>
+                    <b>Ground Bill & Final</b>
+                </button>
 
             </div>
 
 
-        </div>
+            <!-- HEADER ACTIONS -->
 
+            <div class="top-actions">
 
-    </section>
+                <button
+                    class="icon-btn"
+                    id="historyBtn"
+                    type="button"
+                    title="Bill History"
+                >
+                    📚
+                </button>
 
-
-
-    <!-- ================= CALCULATE ================= -->
-
-    <button
-        type="button"
-        id="calculateBtn"
-        class="main-calculate-btn"
-    >
-
-        ⚡ Calculate Electricity Bill
-
-    </button>
-
-
-
-    <!-- ================= RESULT ================= -->
-
-    <section
-        id="result"
-        class="result-section"
-    >
-
-
-
-        <!-- ================= INDIVIDUAL CALCULATION ================= -->
-
-        <div class="card">
-
-
-            <h2>
-                🔢 Individual Calculations
-            </h2>
-
-
-            <div id="individualCalculations"></div>
-
-
-        </div>
-
-
-
-        <!-- ================= ROOM BILL ================= -->
-
-        <div class="card">
-
-
-            <h2>
-                🏠 Room Bill Summary
-            </h2>
-
-
-            <div class="table-wrapper">
-
-
-                <table>
-
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Consumer
-                            </th>
-
-                            <th>
-                                Past
-                            </th>
-
-                            <th>
-                                Current
-                            </th>
-
-                            <th>
-                                Units
-                            </th>
-
-                            <th>
-                                Units × ₹8
-                            </th>
-
-                            <th>
-                                Room Bill
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody
-                        id="roomTableBody"
-                    ></tbody>
-
-
-                    <tfoot>
-
-                        <tr>
-
-                            <th colspan="3">
-                                Total
-                            </th>
-
-                            <th id="totalUnits">
-                                0
-                            </th>
-
-                            <th>
-                                -
-                            </th>
-
-                            <th id="totalRoomBill">
-                                ₹0.00
-                            </th>
-
-                        </tr>
-
-                    </tfoot>
-
-
-                </table>
-
+                <button
+                    class="icon-btn"
+                    id="themeBtn"
+                    type="button"
+                    title="Toggle theme"
+                >
+                    ☀️
+                </button>
 
             </div>
 
-
-        </div>
-
+        </header>
 
 
-        <!-- ================= OVERALL CALCULATION ================= -->
+        <!-- ================= MAIN ================= -->
 
-        <div class="card">
-
-
-            <h2>
-                💰 Overall Bill Calculation
-            </h2>
+        <main>
 
 
-            <div class="calculation-box">
+            <!-- =====================================================
+                 SLIDE 1 : METER READINGS
+            ====================================================== -->
+
+            <section
+                class="slide active"
+                id="slide1"
+            >
+
+                <div class="section-card">
 
 
-                <div class="calculation-row">
+                    <!-- SECTION HEADER -->
 
-                    <span>
-                        Overall Electricity Bill
-                    </span>
+                    <div class="section-head">
 
-                    <strong id="overallDisplay">
-                        ₹0.00
-                    </strong>
+                        <div class="section-title">
 
-                </div>
+                            <div class="section-icon">
+                                🧾
+                            </div>
 
+                            <div>
 
+                                <h2>
+                                    Step 1: Enter Meter Readings
+                                </h2>
 
-                <div class="calculation-row">
+                                <p>
+                                    Names are already added.
+                                    Enter current and past meter readings.
+                                </p>
 
-                    <span>
-                        Total Room Bill
-                    </span>
+                            </div>
 
-                    <strong id="roomDisplay">
-                        ₹0.00
-                    </strong>
-
-                </div>
-
+                        </div>
 
 
-                <div class="calculation-row ground-row">
+                        <!-- BILL MONTH -->
 
-                    <span>
-                        Overall Bill − Room Bill
-                    </span>
+                        <div class="bill-date-box">
 
-                    <strong id="groundBill">
-                        ₹0.00
-                    </strong>
+                            <label for="billMonth">
+                                📅 Bill Month
+                            </label>
 
-                </div>
+                            <input
+                                type="month"
+                                id="billMonth"
+                            >
 
-
-            </div>
-
-
-
-            <!-- ================= GROUND BILL ================= -->
-
-            <div class="ground-section">
+                        </div>
 
 
-                <h3>
-                    🌱 Ground Bill Distribution
-                </h3>
+                        <!-- BILL DATE -->
 
+                        <div class="bill-date-box">
 
-                <p>
-                    Ground Bill is automatically divided according to the total number of people living in all rooms.
-                </p>
+                            <label for="billDate">
+                                📆 Bill Date
+                            </label>
 
+                            <input
+                                type="date"
+                                id="billDate"
+                            >
 
-
-                <div class="ground-input">
-
-
-                    <div class="ground-person-input">
-
-                        <label for="groundPersons">
-                            Total Persons
-                        </label>
-
-                        <input
-                            type="number"
-                            id="groundPersons"
-                            value="1"
-                            min="1"
-                            step="1"
-                            readonly
-                        >
+                        </div>
 
                     </div>
 
 
+
+                    <!-- ================= READING TABLE ================= -->
+
+                    <div class="table-wrap">
+
+                        <table class="reading-table">
+
+                            <thead>
+
+                                <tr>
+
+                                    <th>
+                                        #
+                                    </th>
+
+                                    <th>
+                                        👤 Name
+                                    </th>
+
+                                    <th>
+                                        ⏮️ Past Reading
+                                    </th>
+
+                                    <th>
+                                        ⏭️ Current Reading
+                                    </th>
+
+                                    <th>
+                                        ⚡ Units
+                                    </th>
+
+                                    <th>
+                                        💰 Room Bill
+                                    </th>
+
+                                    <th>
+                                        Action
+                                    </th>
+
+                                </tr>
+
+                            </thead>
+
+
+                            <tbody id="readingBody">
+                                <!-- JavaScript will insert people here -->
+                            </tbody>
+
+
+                            <tfoot>
+
+                                <tr>
+
+                                    <th colspan="4">
+                                        Σ Total
+                                    </th>
+
+                                    <th id="totalUnits">
+                                        0
+                                    </th>
+
+                                    <th id="totalRoomBill">
+                                        ₹0.00
+                                    </th>
+
+                                    <th>
+                                    </th>
+
+                                </tr>
+
+                            </tfoot>
+
+                        </table>
+
+                    </div>
+
+
+
+                    <!-- ADD PERSON -->
+
                     <button
+                        class="add-person-btn"
+                        id="addPersonBtn"
                         type="button"
-                        id="groundCalculateBtn"
-                        class="ground-btn"
                     >
-                        Calculate Ground Share
+                        ＋ Add Person
                     </button>
 
 
-                </div>
 
+                    <!-- ================= STAT CARDS ================= -->
 
+                    <div class="stats-grid">
 
-                <!-- GROUND RESULT -->
 
-                <div
-                    id="groundResult"
-                    class="ground-result"
-                >
+                        <!-- RATE -->
 
+                        <div class="stat-card amber">
 
-                    <div>
+                            <span>
+                                💡 Rate Per Unit
+                            </span>
 
-                        <span>
-                            Ground Bill
-                        </span>
+                            <strong>
+                                ₹<span id="rateDisplay">8</span>
+                            </strong>
 
-                        <strong id="groundAmountDisplay">
-                            ₹0.00
-                        </strong>
+                            <small>
+                                Fixed rate
+                            </small>
 
-                    </div>
+                        </div>
 
 
+                        <!-- TOTAL UNITS -->
 
-                    <div>
+                        <div class="stat-card blue">
 
-                        <span>
-                            Divided Among
-                        </span>
+                            <span>
+                                ⚡ Total Units
+                            </span>
 
-                        <strong id="groundPersonsDisplay">
-                            0
-                        </strong>
-
-                        <span>
-                            Persons
-                        </span>
-
-                    </div>
-
-
-
-                    <div class="share-result">
-
-                        <span>
-                            Ground Share Per Person
-                        </span>
-
-                        <strong id="groundShare">
-                            ₹0.00
-                        </strong>
-
-                    </div>
-
-
-                </div>
-
-
-            </div>
-
-
-
-        </div>
-
-
-
-        <!-- ================= FINAL BILL ================= -->
-
-        <div
-            id="finalSection"
-            class="card"
-        >
-
-
-            <div class="final-heading">
-
-
-                <div>
-
-                    <h2>
-                        🧾 Final Bill
-                    </h2>
-
-                    <p id="finalBillInfo">
-                        Electricity Bill
-                    </p>
-
-                </div>
-
-
-            </div>
-
-
-
-            <div class="table-wrapper">
-
-
-                <table>
-
-
-                    <thead>
-
-                        <tr>
-
-                            <th>
-                                Consumer
-                            </th>
-
-                            <th>
-                                Units
-                            </th>
-
-                            <th>
-                                Room Bill
-                            </th>
-
-                            <th>
-                                People
-                            </th>
-
-                            <th>
-                                Ground Share
-                            </th>
-
-                            <th>
-                                Final Bill
-                            </th>
-
-                        </tr>
-
-                    </thead>
-
-
-                    <tbody
-                        id="finalTableBody"
-                    ></tbody>
-
-
-                    <tfoot>
-
-                        <tr>
-
-                            <th>
-                                Total
-                            </th>
-
-                            <th id="finalUnitsTotal">
+                            <strong id="totalUnitsCard">
                                 0
-                            </th>
+                            </strong>
 
-                            <th id="finalRoomTotal">
+                            <small>
+                                All rooms
+                            </small>
+
+                        </div>
+
+
+                        <!-- TOTAL ROOM BILL -->
+
+                        <div class="stat-card green">
+
+                            <span>
+                                🏠 Total Room Bill
+                            </span>
+
+                            <strong id="totalRoomBillCard">
                                 ₹0.00
-                            </th>
+                            </strong>
 
-                            <th id="finalPeopleTotal">
-                                0
-                            </th>
+                            <small>
+                                Units × ₹8
+                            </small>
 
-                            <th id="finalGroundTotal">
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- NEXT -->
+
+                    <div class="next-row">
+
+                        <button
+                            class="primary-btn"
+                            id="nextBtn"
+                            type="button"
+                        >
+                            Next: Ground Bill & Final →
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =====================================================
+                 SLIDE 2 : GROUND BILL + FINAL
+            ====================================================== -->
+
+            <section
+                class="slide"
+                id="slide2"
+            >
+
+                <div class="section-card">
+
+
+                    <!-- HEADER -->
+
+                    <div class="section-head simple">
+
+                        <div class="section-title">
+
+                            <div class="section-icon purple">
+                                👥
+                            </div>
+
+                            <div>
+
+                                <h2>
+                                    Step 2: Ground Bill & Final Calculation
+                                </h2>
+
+                                <p>
+                                    Add the overall bill, choose the number
+                                    of ground shares, and set each person's
+                                    multiplier.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+
+                        <button
+                            class="back-btn"
+                            id="backBtn"
+                            type="button"
+                        >
+                            ← Back
+                        </button>
+
+                    </div>
+
+
+
+                    <!-- ================= TOP SUMMARY ================= -->
+
+                    <div class="summary-top">
+
+
+                        <!-- OVERALL BILL -->
+
+                        <div class="money-card overall">
+
+                            <span>
+                                📄 Overall Electricity Bill
+                            </span>
+
+                            <div class="money-input">
+
+                                <span>
+                                    ₹
+                                </span>
+
+                                <input
+                                    type="number"
+                                    id="overallBill"
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="Enter total bill"
+                                >
+
+                            </div>
+
+                        </div>
+
+
+                        <!-- ROOM BILL -->
+
+                        <div class="money-card room">
+
+                            <span>
+                                🏠 Total Room Bill
+                            </span>
+
+                            <strong id="groundRoomBill">
                                 ₹0.00
-                            </th>
+                            </strong>
 
-                            <th id="finalTotal">
+                        </div>
+
+
+                        <!-- GROUND BILL -->
+
+                        <div class="money-card ground">
+
+                            <span>
+                                🌱 Ground Bill
+                            </span>
+
+                            <strong id="groundBillDisplay">
                                 ₹0.00
-                            </th>
+                            </strong>
 
-                        </tr>
+                            <small>
+                                Overall Bill − Room Bills
+                            </small>
 
-                    </tfoot>
+                        </div>
 
-
-                </table>
-
-
-            </div>
+                    </div>
 
 
 
-            <!-- ================= DOWNLOAD ================= -->
+                    <!-- ================= GROUND CONTROLS ================= -->
 
-            <div class="download-buttons">
-
-
-                <button
-                    type="button"
-                    id="pdfBtn"
-                    class="pdf-btn"
-                >
-                    📄 Download PDF
-                </button>
+                    <div class="ground-controls">
 
 
-                <button
-                    type="button"
-                    id="imageBtn"
-                    class="image-btn"
-                >
-                    🖼 Download Image
-                </button>
+                        <!-- DIVIDE BY -->
 
+                        <div class="divide-card">
 
-            </div>
+                            <div class="big-icon">
+                                👥
+                            </div>
 
+                            <div>
 
+                                <label for="divideBy">
+                                    Divide Ground Bill By
+                                </label>
 
-            <!-- ================= SAVE HISTORY ================= -->
+                                <div class="divide-input">
 
-            <div class="save-history-area">
+                                    <input
+                                        type="number"
+                                        id="divideBy"
+                                        min="1"
+                                        step="1"
+                                        value="1"
+                                    >
 
+                                    <span>
+                                        shares / persons
+                                    </span>
 
-                <button
-                    type="button"
-                    id="saveHistoryBtn"
-                    class="save-history-btn"
-                >
-                    💾 Save Bill to History
-                </button>
+                                </div>
 
+                                <small>
+                                    Enter any number of shares you want.
+                                </small>
 
-            </div>
+                            </div>
 
-
-        </div>
-
-
-    </section>
+                        </div>
 
 
 
-    <!-- ================= HISTORY ================= -->
+                        <!-- SHARE PER PERSON -->
 
-    <section
-        id="historySection"
-        class="history-section"
-    >
+                        <div class="share-card">
+
+                            <div class="big-icon">
+                                ₹
+                            </div>
+
+                            <div>
+
+                                <span>
+                                    Ground Share Per Person
+                                </span>
+
+                                <strong id="sharePerPerson">
+                                    ₹0.00
+                                </strong>
+
+                                <small id="shareFormula">
+                                    Ground Bill ÷ Shares
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
 
 
-        <div class="history-header">
 
+                    <!-- ================= GROUND DISTRIBUTION ================= -->
+
+                    <div class="ground-table-wrap">
+
+
+                        <div class="subhead">
+
+                            <div>
+
+                                <h3>
+                                    🌱 Ground Bill Distribution
+                                </h3>
+
+                                <p>
+                                    Use ×2 for a room with two people,
+                                    ×3 for three people, etc.
+                                </p>
+
+                            </div>
+
+
+                            <button
+                                class="small-add"
+                                id="addGroundPersonBtn"
+                                type="button"
+                            >
+                                ＋ Add Person
+                            </button>
+
+                        </div>
+
+
+
+                        <div class="table-wrap">
+
+                            <table class="ground-table">
+
+                                <thead>
+
+                                    <tr>
+
+                                        <th>
+                                            #
+                                        </th>
+
+                                        <th>
+                                            👤 Name
+                                        </th>
+
+                                        <th>
+                                            🏠 Room Bill
+                                        </th>
+
+                                        <th>
+                                            👥 Ground ×
+                                        </th>
+
+                                        <th>
+                                            💵 Ground Amount
+                                        </th>
+
+                                        <th>
+                                            🧾 Final Bill
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody id="groundBody">
+                                    <!-- JavaScript inserts rows -->
+                                </tbody>
+
+
+                                <tfoot>
+
+                                    <tr>
+
+                                        <th colspan="2">
+                                            Σ Total
+                                        </th>
+
+                                        <th id="groundRoomTotal2">
+                                            ₹0.00
+                                        </th>
+
+                                        <th id="multiplierTotal">
+                                            1
+                                        </th>
+
+                                        <th id="groundTotal2">
+                                            ₹0.00
+                                        </th>
+
+                                        <th id="finalTotal">
+                                            ₹0.00
+                                        </th>
+
+                                    </tr>
+
+                                </tfoot>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- ================= FINAL SUMMARY ================= -->
+
+                    <div class="final-summary">
+
+
+                        <div>
+
+                            <span>
+                                Overall Bill
+                            </span>
+
+                            <strong id="finalOverall">
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Room Bills
+                            </span>
+
+                            <strong id="finalRoom">
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            <span>
+                                Ground Bill
+                            </span>
+
+                            <strong id="finalGround">
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+
+                        <div class="total">
+
+                            <span>
+                                Final Total
+                            </span>
+
+                            <strong id="finalTotalBig">
+                                ₹0.00
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+
+
+                    <!-- ================= DOWNLOAD BUTTONS ================= -->
+
+                    <div class="download-row">
+
+
+                        <button
+                            class="download pdf"
+                            id="downloadPdf"
+                            type="button"
+                        >
+                            📄 Download PDF
+                        </button>
+
+
+                        <button
+                            class="download image"
+                            id="downloadImage"
+                            type="button"
+                        >
+                            🖼️ Download Image
+                        </button>
+
+
+                        <button
+                            class="download history"
+                            id="saveHistory"
+                            type="button"
+                        >
+                            💾 Save to History
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+
+
+            <!-- =====================================================
+                 HISTORY
+            ====================================================== -->
+
+            <section
+                class="history-panel"
+                id="historyPanel"
+            >
+
+                <div class="history-card">
+
+
+                    <div class="history-head">
+
+                        <div>
+
+                            <h2>
+                                📚 Bill History
+                            </h2>
+
+                            <p>
+                                Your saved bills on this browser/device.
+                            </p>
+
+                        </div>
+
+
+                        <button
+                            class="close-btn"
+                            id="closeHistory"
+                            type="button"
+                        >
+                            ✕
+                        </button>
+
+                    </div>
+
+
+                    <div id="historyContent">
+                        <!-- History inserted by JavaScript -->
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
+
+
+
+        <!-- ================= FOOTER ================= -->
+
+        <footer>
 
             <div>
 
-                <h2>
-                    📚 Bill History
-                </h2>
+                <span>
+                    ⚡
+                </span>
 
-                <p>
-                    View your previous electricity bills
-                </p>
+                <b>
+                    Electricity Bill Splitter
+                </b>
+
+                <span>
+                    Made with ❤️ by Shubham Srivastava
+                </span>
 
             </div>
 
 
-            <button
-                type="button"
-                id="closeHistoryBtn"
-                class="close-history-btn"
-            >
-                ×
-            </button>
+            <div>
+                Fair Sharing • Better Living • Brighter Tomorrow
+            </div>
 
+        </footer>
 
-        </div>
+    </div>
 
 
 
-        <div id="historyList"></div>
+    <!-- ================= TOAST ================= -->
 
-
-    </section>
-
-
-
-    <!-- ================= FOOTER ================= -->
-
-    <footer>
-
-        <p>
-            Made by
-            <strong>
-                Shubham Srivastava
-            </strong>
-        </p>
-
-        <p>
-            © 2026 All Rights Reserved
-        </p>
-
-    </footer>
-
-
-</div>
+    <div
+        class="toast"
+        id="toast"
+    ></div>
 
 
 
-<script src="script.js"></script>
+    <!-- ================= DOWNLOAD LIBRARIES ================= -->
 
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js">
+    </script>
+
+
+    <!-- MAIN JAVASCRIPT -->
+
+    <script src="script.js"></script>
 
 </body>
 
